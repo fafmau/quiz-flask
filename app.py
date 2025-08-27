@@ -3,7 +3,8 @@ from flask import Flask, render_template, request, redirect, url_for, session
 import json, os, random
 
 app = Flask(__name__)
-app.secret_key = "secret123"
+app.secret_key = os.environ.get("SECRET_KEY", "devkey")
+
 
 USERS_FILE = "users.json"
 LEADERBOARD_FILE = "leaderboard.json"
