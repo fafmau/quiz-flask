@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz QCM</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<style>
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: #cce7ff; /* bleu pastel */
+  border-bottom: 2px solid #99ccff;
+  font-family: 'Arial', sans-serif;
+  font-weight: bold;
+  color: #03396c; /* bleu foncé cohérent */
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-left h1 {
+  margin: 0;
+  font-size: 24px;
+  color: #03396c;
+}
+
+.header-left span {
+  font-size: 16px;
+  color: #03396c;
+}
+
+nav {
+  display: flex;
+  gap: 10px;
+}
+
+nav a {
+  padding: 5px 12px;
+  border-radius: 5px;
+  text-decoration: none;
+  font-size: 16px;
+  color: #03396c; /* même bleu que le texte gauche */
+
+  transition: background 0.3s;
+}
+
+nav a:hover {
+  background-color: #b3dbff; /* survol légèrement plus marqué */
+}
+
+</style>
+
+
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <h1>Quiz QCM</h1>
+      {% if session.get('pseudo') %}
+        <span>Connecté en tant que : {{ session.get('pseudo') }}</span>
+      {% endif %}
+    </div>
+    <nav>
+      <a href="{{ url_for('home') }}">Accueil</a>
+      {% if session.get('pseudo') %}
+        <a href="{{ url_for('logout') }}">Déconnexion</a>
+      {% else %}
+        <a href="{{ url_for('login') }}">Connexion</a>
+        <a href="{{ url_for('register') }}">Inscription</a>
+      {% endif %}
+    </nav>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  <footer>
+    <p>&copy; 2025 Quiz QCM</p>
+  </footer>
+</body>
+</html>

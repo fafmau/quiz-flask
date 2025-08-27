@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h2>Leaderboard</h2>
+
+    {% if message %}
+        <div class="message">{{ message }}</div>
+    {% endif %}
+
+    <table id="leaderboard-table">
+        <tr>
+            <th>Classement</th>
+            <th>Pseudo</th>
+            <th>Points</th>
+            <th>Questions répondues</th>
+            <th>% Bonne réponses</th>
+        </tr>
+        {% for i, entry in enumerate(leaderboard, start=1) %}
+            <tr>
+                <td>{{ i }}</td>
+                <td>{{ entry.name }}</td>
+                <td>{{ entry.score }}</td>
+                <td>{{ entry.total_questions }}</td>
+                <td>{{ entry.percentage }}%</td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    {% if remaining_questions > 0 %}
+        <p class="message">Il vous reste {{ remaining_questions }} question{{ 's' if remaining_questions > 1 else '' }} à répondre.</p>
+    {% endif %}
+</div>
+{% endblock %}

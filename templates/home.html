@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Accueil</h2>
+
+{% if pseudo %}
+  <p>Score actuel : {{ current_score }} | Rang : {{ current_rank }}</p>
+  <p>Vous avez 10 secondes par question. au dela une réponse fausse sera automatiquement choisie</p>
+
+  {% if remaining_questions > 0 %}
+    <p>Il vous reste {{ remaining_questions }} question{{ 's' if remaining_questions > 1 else '' }} en reserve.</p>
+    <a class="btn" href="{{ url_for('start_quiz') }}">Commencer un nouveau bloc</a>
+  {% else %}
+    <p>Vous avez répondu à toutes les questions ! Revenez demain pour de nouvelles questions.</p>
+  {% endif %}
+{% else %}
+  <p>Connectez-vous pour jouer au quiz.</p>
+{% endif %}
+
+<h3>Classement</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Classement</th>
+      <th>Pseudo</th>
+      <th>Points</th>
+      <th>Questions répondues</th>
+      <th>% bonnes réponses</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% set player_in_top = false %}
+    {% for idx, entry in enumerate(leaderboard[:10], 1) %}
+      <tr class="{% if pseudo == entry.name %}current-player{% endif %}">
+        <td>{{ idx }}</td>
+        <td>{{ entry.name }}</td>
+        <td>{{ entry.score }}</td>
+        <td>{{ entry.total_questions }}</td>
+        <td>{{ entry.percentage }}%</td>
+      </tr>
+      {% if pseudo == entry.name %}
+        {% set player_in_top = true %}
+      {% endif %}
+    {% endfor %}
+
+    {% if not player_in_top and user %}
+      <tr class="current-player">
+        <td>{{ current_rank }}</td>
+        <td>{{ user.pseudo }}</td>
+        <td>{{ user.score }}</td>
+        <td>{{ user.asked_questions | length }}</td>
+        <td>{{ (user.score / (user.asked_questions|length) * 100) | int if user.asked_questions else 0 }}%</td>
+      </tr>
+    {% endif %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Question {{ q_index }} / {{ total }}</h2>
+
+<div class="progress-container">
+  <div class="progress" style="width: {{ (q_index / total) * 100 }}%;"></div>
+</div>
+
+<p>{{ question.question }}</p>
+<form id="quizForm" method="post" action="{{ url_for('answer') }}">
+  <input type="hidden" name="question_id" value="{{ question.id }}">
+  <input type="hidden" name="correct_index" value="{{ question.correct_index }}">
+  {% for i, answer in enumerate(question.answers) %}
+    {% set is_selected = (last_selected == i) %}
+    {% set is_correct = (question.correct_index == i) %}
+    <button
+      type="submit"
+      name="answer_index"
+      value="{{ i }}"
+      class="answer-btn {% if show_result and is_correct %}correct{% elif show_result and is_selected and not is_correct %}incorrect{% endif %}"
+      {% if show_result %}disabled{% endif %}
+    >
+      <span class="label">{{ answer }}</span>
+      {% if show_result %}
+        {% if is_correct %}<span class="icon">✓</span>{% elif is_selected and not is_correct %}<span class="icon">✗</span>{% endif %}
+      {% endif %}
+    </button>
+  {% endfor %}
+</form>
+
+<p>Score actuel : {{ score }}</p>
+
+<!-- Timer affiché -->
+<p>Temps restant : <span id="timeLeft">10</span> s</p>
+
+<script>
+let timeLeft = 10;
+let timerInterval = setInterval(() => {
+    timeLeft--;
+    document.getElementById('timeLeft').textContent = timeLeft;
+
+    if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        // Sélectionner automatiquement une réponse incorrecte
+        let buttons = Array.from(document.querySelectorAll('form#quizForm button:not([disabled])'));
+        let wrongButton = buttons.find(b => parseInt(b.value) !== {{ question.correct_index }});
+        if (wrongButton) wrongButton.click();
+    }
+}, 1000);
+</script>
+
+{% if show_result %}
+<script>
+  setTimeout(function () {
+    window.location.href = "{{ url_for('next_question') }}";
+  }, 1000);
+</script>
+{% endif %}
+
+{% endblock %}
