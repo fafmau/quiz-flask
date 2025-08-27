@@ -25,31 +25,33 @@
   </thead>
   <tbody>
     {% set current_in_top = false %}
-    {% for idx, entry in enumerate(leaderboard[:10], 1) %}
-      {% if session.get('pseudo') == entry.name %}
+{% for entry in leaderboard[:10] %}
+    {% set idx = loop.index %}
+    {% if session.get('pseudo') == entry.name %}
         {% set current_in_top = true %}
-      {% endif %}
-      <tr class="{% if session.get('pseudo') == entry.name %}current-player{% endif %}">
+    {% endif %}
+    <tr class="{% if session.get('pseudo') == entry.name %}current-player{% endif %}">
         <td>{{ idx }}</td>
         <td>{{ entry.name }}</td>
         <td>{{ entry.score }}</td>
         <td>{{ entry.total_questions }}</td>
         <td>{{ entry.percentage }}%</td>
-      </tr>
-    {% endfor %}
+    </tr>
+{% endfor %}
+
 
     {% if not current_in_top %}
-      {% for idx, entry in enumerate(leaderboard, 1) %}
-        {% if session.get('pseudo') == entry.name %}
-          <tr class="current-player">
-            <td>{{ idx }}</td>
-            <td>{{ entry.name }}</td>
-            <td>{{ entry.score }}</td>
-            <td>{{ entry.total_questions }}</td>
-            <td>{{ entry.percentage }}%</td>
+      {% for entry in leaderboard %}
+          {% set idx = loop.index %}
+          <tr class="{% if session.get('pseudo') == entry.name %}current-player{% endif %}">
+              <td>{{ idx }}</td>
+              <td>{{ entry.name }}</td>
+              <td>{{ entry.score }}</td>
+              <td>{{ entry.total_questions }}</td>
+              <td>{{ entry.percentage }}%</td>
           </tr>
-        {% endif %}
       {% endfor %}
+
     {% endif %}
   </tbody>
 </table>

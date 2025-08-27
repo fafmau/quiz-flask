@@ -30,9 +30,9 @@
   </thead>
   <tbody>
     {% set player_in_top = false %}
-    {% for idx, entry in enumerate(leaderboard[:10], 1) %}
+    {% for entry in leaderboard[:10] %}
       <tr class="{% if pseudo == entry.name %}current-player{% endif %}">
-        <td>{{ idx }}</td>
+        <td>{{ loop.index }}</td>
         <td>{{ entry.name }}</td>
         <td>{{ entry.score }}</td>
         <td>{{ entry.total_questions }}</td>
@@ -42,6 +42,7 @@
         {% set player_in_top = true %}
       {% endif %}
     {% endfor %}
+
 
     {% if not player_in_top and user %}
       <tr class="current-player">

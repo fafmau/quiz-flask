@@ -11,7 +11,8 @@
 <form id="quizForm" method="post" action="{{ url_for('answer') }}">
   <input type="hidden" name="question_id" value="{{ question.id }}">
   <input type="hidden" name="correct_index" value="{{ question.correct_index }}">
-  {% for i, answer in enumerate(question.answers) %}
+  {% for answer in question.answers %}
+    {% set i = loop.index0 %}
     {% set is_selected = (last_selected == i) %}
     {% set is_correct = (question.correct_index == i) %}
     <button
@@ -26,7 +27,8 @@
         {% if is_correct %}<span class="icon">✓</span>{% elif is_selected and not is_correct %}<span class="icon">✗</span>{% endif %}
       {% endif %}
     </button>
-  {% endfor %}
+{% endfor %}
+
 </form>
 
 <p>Score actuel : {{ score }}</p>
