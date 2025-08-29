@@ -1,277 +1,190 @@
-import hashlib
 from flask import Flask, render_template, request, redirect, url_for, session
-import json, os, random
+from werkzeug.security import generate_password_hash, check_password_hash
+import random
+import mysql.connector
+from mysql.connector import Error
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "devkey")
+app.secret_key = "ton_secret_key"  # à changer
+
+# ---------------------------
+# Connexion à MySQL
+# ---------------------------
+def get_db_connection():
+    return mysql.connector.connect(
+        host="localhost",
+        user="quizuser",
+        password="motdepasse",
+        database="quiz_flask"
+    )
 
 
-USERS_FILE = "users.json"
-LEADERBOARD_FILE = "leaderboard.json"
-QUESTIONS_FILE = "Questions_QCM.txt"
+# ---------------------------
+# Gestion des utilisateurs
+# ---------------------------
+def add_user(pseudo, password):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        password_hash = generate_password_hash(password)
+        cursor.execute(
+            "INSERT INTO users (pseudo, password_hash) VALUES (%s, %s)",
+            (pseudo, password_hash)
+        )
+        conn.commit()  # ← obligatoire
+    except mysql.connector.Error as e:
+        print("Erreur:", e)
+        raise e
+    finally:
+        cursor.close()
+        conn.close()
 
-# ------------------ UTILITAIRES ------------------
-def load_users():
-    if os.path.exists(USERS_FILE):
-        with open(USERS_FILE, "r", encoding="utf-8") as f:
-            try:
-                return json.load(f)
-            except json.JSONDecodeError:
-                pass
-    return []
 
-def save_users(users):
-    with open(USERS_FILE, "w", encoding="utf-8") as f:
-        json.dump(users, f, ensure_ascii=False, indent=2)
+def get_user(pseudo):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM users WHERE pseudo=%s", (pseudo,))
+    user = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return user
 
-def hash_password(pwd):
-    return hashlib.sha256(pwd.encode()).hexdigest()
+# ---------------------------
+# Gestion du leaderboard
+# ---------------------------
+def update_leaderboard(user_id, score, total_questions):
+    percentage = (score / total_questions * 100) if total_questions > 0 else 0
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO leaderboard (user_id, score, total_questions, percentage)
+        VALUES (%s, %s, %s, %s)
+        ON DUPLICATE KEY UPDATE score=%s, total_questions=%s, percentage=%s
+    """, (user_id, score, total_questions, percentage, score, total_questions, percentage))
+    conn.commit()
+    cursor.close()
+    conn.close()
 
-def load_leaderboard():
-    if os.path.exists(LEADERBOARD_FILE):
-        with open(LEADERBOARD_FILE, "r", encoding="utf-8") as f:
-            try:
-                return json.load(f)
-            except json.JSONDecodeError:
-                pass
-    return []
+def get_leaderboard():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT u.pseudo, l.score, l.total_questions, l.percentage
+        FROM leaderboard l
+        JOIN users u ON l.user_id = u.id
+        ORDER BY l.score DESC
+        LIMIT 10
+    """)
+    leaderboard = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return leaderboard
 
-def save_leaderboard(leaderboard):
-    with open(LEADERBOARD_FILE, "w", encoding="utf-8") as f:
-        json.dump(leaderboard, f, ensure_ascii=False, indent=2)
-
+# ---------------------------
+# Chargement des questions
+# ---------------------------
 def load_questions():
     questions = []
-    if not os.path.exists(QUESTIONS_FILE):
-        return questions
-    with open(QUESTIONS_FILE, "r", encoding="utf-8") as f:
-        for idx, line in enumerate(f):
-            parts = [p.strip() for p in line.strip().split(";")]
-            if len(parts) == 5:
-                question_text = parts[0]
-                answers = parts[1:]
-                correct_text = answers[0]
-                random.shuffle(answers)
-                correct_index = answers.index(correct_text)
+    with open("Questions_QCM.txt", "r", encoding="utf-8") as f:
+        for line in f:
+            parts = line.strip().split(";")
+            if len(parts) >= 5:
                 questions.append({
-                    "id": idx,
-                    "question": question_text,
-                    "answers": answers,
-                    "correct_index": correct_index
+                    "question": parts[0],
+                    "answers": parts[1:5],
+                    "correct_index": 0  # toujours première réponse correcte
                 })
     return questions
 
-def get_leaderboard():
-    leaderboard = load_leaderboard()
-    users = load_users()
-    enriched_lb = []
-    for entry in leaderboard:
-        user = next((u for u in users if u["pseudo"] == entry["name"]), None)
-        if user:
-            total_questions = len(user.get("asked_questions", []))
-            score = user.get("score", 0)
-            percentage = int(score / total_questions * 100) if total_questions else 0
-            enriched_lb.append({
-                "name": user["pseudo"],
-                "score": score,
-                "total_questions": total_questions,
-                "percentage": percentage
-            })
-    enriched_lb.sort(key=lambda x: x["score"], reverse=True)
-    return enriched_lb
-
-# ------------------ ROUTES ------------------
+# ---------------------------
+# Routes
+# ---------------------------
 @app.route("/")
 def home():
     pseudo = session.get("pseudo")
-    current_score = 0
-    current_rank = None
-    remaining_questions = 0
-
-    leaderboard = get_leaderboard()  # tout le leaderboard enrichi
-    users = load_users()  # nécessaire pour calculer remaining_questions
-
-    # Trouver l'utilisateur connecté
-    user = None
-    if pseudo:
-        user = next((u for u in users if u["pseudo"] == pseudo), None)
-        if user:
-            current_score = user.get("score", 0)
-            # Rang
-            for idx, entry in enumerate(leaderboard):
-                if entry["name"] == pseudo:
-                    current_rank = idx + 1
-                    break
-            # Questions restantes
-            total_questions = len(load_questions())
-            answered = len(user.get("asked_questions", []))
-            remaining_questions = max(0, total_questions - answered)
-
-    return render_template(
-        "home.html",
-        pseudo=pseudo,
-        current_score=current_score,
-        current_rank=current_rank,
-        leaderboard=leaderboard,  # <-- on passe tout le leaderboard
-        remaining_questions=remaining_questions,
-        user=user  # <-- on passe l'utilisateur connecté
-    )
-
+    if not pseudo:
+        return redirect(url_for("login"))
+    leaderboard = get_leaderboard()
+    return render_template("home.html", pseudo=pseudo, leaderboard=leaderboard)
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        pseudo = request.form["pseudo"].strip()
+        pseudo = request.form["pseudo"].strip()[:50]  # max 50 caractères
         password = request.form["password"]
-        users = load_users()
-        if any(u["pseudo"] == pseudo for u in users):
+
+        if not pseudo or not password:
+            return "Pseudo et mot de passe requis !"
+
+        # Vérifie si le pseudo existe déjà
+        if get_user(pseudo):
             return "Pseudo déjà utilisé !"
-        users.append({
-            "pseudo": pseudo,
-            "password": hash_password(password),
-            "score": 0,
-            "asked_questions": []
-        })
-        save_users(users)
+
+        try:
+            add_user(pseudo, password)
+        except mysql.connector.Error as e:
+            if e.errno == 1406:  # Data too long
+                return "Pseudo trop long ! Limite 50 caractères."
+            else:
+                return f"Erreur base de données : {e}"
+
         return redirect(url_for("login"))
+
     return render_template("register.html")
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
         pseudo = request.form["pseudo"]
         password = request.form["password"]
-        users = load_users()
-        user = next((u for u in users if u["pseudo"] == pseudo), None)
-        if user and user["password"] == hash_password(password):
-            session["pseudo"] = pseudo
-            session["current_score"] = user.get("score", 0)
-            return redirect(url_for("home"))
-        return "Pseudo ou mot de passe incorrect !"
+        user = get_user(pseudo)
+        if not user or not check_password_hash(user["password_hash"], password):
+            return "Pseudo ou mot de passe incorrect"
+        session["pseudo"] = pseudo
+        session["user_id"] = user["id"]
+        return redirect(url_for("home"))
     return render_template("login.html")
 
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("home"))
+    return redirect(url_for("login"))
 
-@app.route("/start_quiz")
-def start_quiz():
-    if "pseudo" not in session:
-        return redirect(url_for("login"))
-    all_questions = load_questions()
-    users = load_users()
-    user = next(u for u in users if u["pseudo"] == session["pseudo"])
-    asked_ids = user.get("asked_questions", [])
-    available = [q for q in all_questions if q["id"] not in asked_ids]
-    if not available:
-        return render_template("quiz_end.html", leaderboard=get_leaderboard(), message="Vous avez répondu à toutes les questions !", remaining_questions=0)
-    block_questions = random.sample(available, min(10, len(available)))
-    for q in block_questions:
-        answers = q["answers"].copy()
-        correct_text = answers[q["correct_index"]]
-        random.shuffle(answers)
-        q["answers"] = answers
-        q["correct_index"] = answers.index(correct_text)
-    session["questions"] = block_questions
-    session["q_index"] = 0
-    session["session_score"] = 0
-    return redirect(url_for("quiz"))
-
-@app.route("/quiz")
+@app.route("/quiz", methods=["GET", "POST"])
 def quiz():
     if "pseudo" not in session:
         return redirect(url_for("login"))
-    questions = session.get("questions", [])
-    q_index = session.get("q_index", 0)
-    total = len(questions)
-    if total == 0:
-        return redirect(url_for("home"))
-    if q_index >= total:
-        return render_template("quiz_end.html", leaderboard=get_leaderboard(), message="Bloc terminé !", remaining_questions=len(load_questions()) - len(next(u for u in load_users() if u["pseudo"] == session["pseudo"])["asked_questions"]))
+
+    if "questions" not in session:
+        session["questions"] = load_questions()
+        random.shuffle(session["questions"])
+        session["score"] = 0
+        session["q_index"] = 0
+
+    questions = session["questions"]
+    q_index = session["q_index"]
+
+    if request.method == "POST":
+        answer = int(request.form.get("answer"))
+        correct_index = questions[q_index]["correct_index"]
+        if answer == correct_index:
+            session["score"] += 1
+        session["q_index"] += 1
+        q_index = session["q_index"]
+
+    if q_index >= len(questions):
+        update_leaderboard(session["user_id"], session["score"], len(questions))
+        session.pop("questions", None)
+        session.pop("q_index", None)
+        score = session.pop("score", 0)
+        return render_template("quiz_end.html", score=score, leaderboard=get_leaderboard())
+
     question = questions[q_index]
-    show_result = session.get("show_result", False)
-    last_selected = session.get("last_selected", None)
-    users = load_users()
-    user = next(u for u in users if u["pseudo"] == session["pseudo"])
-    current_score = user.get("score", 0)
-    return render_template(
-        "quiz.html",
-        question=question,
-        q_index=q_index + 1,
-        total=total,
-        score=current_score,
-        show_result=show_result,
-        last_selected=last_selected
-    )
+    return render_template("quiz.html", question=question, q_index=q_index + 1, total=len(questions), score=session.get("score",0))
 
-@app.route("/answer", methods=["POST"])
-def answer():
-    if "pseudo" not in session:
-        return redirect(url_for("login"))
-    question_id = int(request.form["question_id"])
-    selected_index = int(request.form["answer_index"])
-    correct_index = int(request.form["correct_index"])
-    session["last_selected"] = selected_index
-    session["show_result"] = True
-    session["pending_question_id"] = question_id
-    session["pending_correct"] = int(selected_index == correct_index)
-    return redirect(url_for("quiz"))
-
-@app.route("/next_question")
-def next_question():
-    if "pseudo" not in session:
-        return redirect(url_for("login"))
-
-    # Récupérer les infos de la question précédente
-    pending_q = session.pop("pending_question_id", None)
-    pending_correct = session.pop("pending_correct", None)
-    session.pop("show_result", None)
-    session.pop("last_selected", None)
-
-    if pending_q is not None:
-        users = load_users()
-        user = next(u for u in users if u["pseudo"] == session["pseudo"])
-
-        # Mettre à jour les questions répondues
-        if pending_q not in user.get("asked_questions", []):
-            user["asked_questions"].append(pending_q)
-
-        # Mettre à jour le score
-        if pending_correct:
-            user["score"] = user.get("score", 0) + 1
-
-        save_users(users)
-
-        # Mettre à jour le leaderboard
-        lb = load_leaderboard()
-        lb = [e for e in lb if e["name"] != user["pseudo"]]
-        lb.append({"name": user["pseudo"], "score": user["score"]})
-        lb.sort(key=lambda x: x["score"], reverse=True)
-        save_leaderboard(lb)
-
-    # Passer à la question suivante
-    session["q_index"] = session.get("q_index", 0) + 1
-    questions = session.get("questions", [])
-
-    # Si bloc terminé
-    if session["q_index"] >= len(questions):
-        users = load_users()
-        user = next(u for u in users if u["pseudo"] == session["pseudo"])
-        remaining_questions = len(load_questions()) - len(user.get("asked_questions", []))
-
-        return render_template(
-            "quiz_end.html",
-            leaderboard=get_leaderboard(),
-            message="Bloc terminé !",
-            remaining_questions=remaining_questions,
-            users=users  # nécessaire pour afficher le joueur hors top 10
-        )
-
-    return redirect(url_for("quiz"))
-
-
+# ---------------------------
+# Lancement de l'application
+# ---------------------------
 if __name__ == "__main__":
-    import os
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(debug=True)
