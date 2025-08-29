@@ -1,19 +1,23 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
 import mysql.connector
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = "ton_secret_key"  # Change pour un vrai secret en prod
-
+app.secret_key = os.getenv("FLASK_SECRET", "dev-secret-change-me")
 # ------------------------------
 # Connexion MySQL
 # ------------------------------
 def get_db_connection():
+    import mysql.connector
     return mysql.connector.connect(
-        host="localhost",      # IP ou hostname de ton serveur MySQL
-        user="quizuser",
-        password="motdepasse",
-        database="quiz_flask"
+        host=os.getenv("DB_HOST", "localhost"),
+        port=int(os.getenv("DB_PORT", "3306")),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
     )
 
 # ------------------------------
