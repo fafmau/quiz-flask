@@ -33,16 +33,16 @@ def hash_password(pwd):
 
 def get_user_by_pseudo(pseudo):
     cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM users WHERE pseudo = %s", (pseudo,))
-    user = cur.fetchone()
-    cur.close()
-    return user
+    cur.execute("SELECT id, pseudo, password, score FROM users WHERE pseudo=%s", (pseudo,))
+    return cur.fetchone()  # retourne tuple (id, pseudo, password, score) ou None
+
 
 def add_user(pseudo, password_hashed):
     cur = mysql.connection.cursor()
     cur.execute("INSERT INTO users (pseudo, password) VALUES (%s, %s)", (pseudo, password_hashed))
     mysql.connection.commit()
     cur.close()
+
 
 def load_questions():
     questions = []
