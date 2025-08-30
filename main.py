@@ -86,18 +86,22 @@ def record_answer(user_id, question_id, correct):
 
 def get_leaderboard(limit=10):
     cur = mysql.connection.cursor()
-    cur.execute("""
-        SELECT u.pseudo, u.score, COUNT(uq.question_id) AS total_questions,
-               IF(COUNT(uq.question_id)=0,0, ROUND(u.score / COUNT(uq.question_id) * 100)) AS percentage
-        FROM users u
-        LEFT JOIN user_questions uq ON u.id = uq.user_id
-        GROUP BY u.id
-        ORDER BY u.score DESC
-        LIMIT %s
-    """, (limit,))
-    leaderboard = cur.fetchall()
-    cur.close()
+    cur.execute("SELECT pseudo, score FROM users ORDER BY score DESC LIMIT %s", (limit,))
+    rows = cur.fetchall()
+    leaderboard = []
+    for row in rows:
+        pseudo, score = row
+        cur.execute("SELECT COUNT(*) FROM user_questions WHERE user_id=(SELECT id FROM users WHERE pseudo=%s)", (pseudo,))
+        total_questions = cur.fetchone()[0]
+        percentage = int(score / total_questions * 100) if total_questions else 0
+        leaderboard.append({
+            "name": pseudo,
+            "score": score,
+            "total_questions": total_questions,
+            "percentage": percentage
+        })
     return leaderboard
+
 
 # ------------------ ROUTES ------------------
 @app.route("/")
