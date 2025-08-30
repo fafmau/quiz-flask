@@ -17,12 +17,11 @@ MYSQL_DB = os.environ.get("MYSQL_DB", "quiz_db")
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
-# Config MySQL
-app.config['MYSQL_HOST'] = MYSQL_HOST
-app.config['MYSQL_USER'] = MYSQL_USER
-app.config['MYSQL_PASSWORD'] = MYSQL_PASSWORD
-app.config['MYSQL_DB'] = MYSQL_DB
-app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
+app.config['MYSQL_HOST'] = os.getenv("MYSQL_HOST", "localhost")
+app.config['MYSQL_USER'] = os.getenv("MYSQL_USER", "root")
+app.config['MYSQL_PASSWORD'] = os.getenv("MYSQL_PASSWORD", "")
+app.config['MYSQL_DB'] = os.getenv("MYSQL_DB", "quiz_db")
+app.config['MYSQL_CURSORCLASS'] = 'DictCursor'  # pratique pour fetchall() en dict
 
 mysql = MySQL(app)
 
@@ -84,23 +83,30 @@ def record_answer(user_id, question_id, correct):
     mysql.connection.commit()
     cur.close()
 
-def get_leaderboard(limit=10):
+def get_leaderboard(limit=100):
     cur = mysql.connection.cursor()
-    cur.execute("SELECT pseudo, score FROM users ORDER BY score DESC LIMIT %s", (limit,))
-    rows = cur.fetchall()
+    cur.execute("SELECT id, pseudo, score FROM users ORDER BY score DESC LIMIT %s", (limit,))
+    users = cur.fetchall()
+
     leaderboard = []
-    for row in rows:
-        pseudo, score = row
-        cur.execute("SELECT COUNT(*) FROM user_questions WHERE user_id=(SELECT id FROM users WHERE pseudo=%s)", (pseudo,))
-        total_questions = cur.fetchone()[0]
-        percentage = int(score / total_questions * 100) if total_questions else 0
+    for user in users:
+        # Nombre total de questions répondues
+        cur.execute("SELECT COUNT(*) AS total FROM user_questions WHERE user_id=%s", (user['id'],))
+        row = cur.fetchone()
+        total_questions = row['total'] if row else 0
+
+        # Pourcentage de bonnes réponses
+        percentage = int(user['score'] / total_questions * 100) if total_questions else 0
+
         leaderboard.append({
-            "name": pseudo,
-            "score": score,
+            "name": user['pseudo'],
+            "score": user['score'],
             "total_questions": total_questions,
             "percentage": percentage
         })
+
     return leaderboard
+
 
 
 # ------------------ ROUTES ------------------
@@ -111,19 +117,27 @@ def home():
     current_rank = None
     remaining_questions = 0
 
-    leaderboard = get_leaderboard(100)  # top 100 pour calculer le rang complet
-    user = None
+    leaderboard = get_leaderboard(100)
+
     if pseudo:
-        user = get_user_by_pseudo(pseudo)
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT id, score FROM users WHERE pseudo=%s", (pseudo,))
+        user = cur.fetchone()
         if user:
             current_score = user['score']
+
+            # Calcul du rang
             for idx, entry in enumerate(leaderboard):
-                if entry['pseudo'] == pseudo:
+                if entry['name'] == pseudo:
                     current_rank = idx + 1
                     break
-            total_questions = len(load_questions())
-            answered = len(get_user_answered_questions(user['id']))
-            remaining_questions = max(0, total_questions - answered)
+
+            # Questions restantes
+            cur.execute("SELECT COUNT(*) AS total_questions FROM user_questions WHERE user_id=%s", (user['id'],))
+            row = cur.fetchone()
+            answered_questions = row['total_questions'] if row else 0
+            total_available_questions = len(load_questions())  # à partir du .txt
+            remaining_questions = max(0, total_available_questions - answered_questions)
 
     return render_template(
         "home.html",
@@ -132,8 +146,9 @@ def home():
         current_rank=current_rank,
         leaderboard=leaderboard,
         remaining_questions=remaining_questions,
-        user=user
+        user={"pseudo": pseudo, "score": current_score, "answered_questions": remaining_questions}
     )
+
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
