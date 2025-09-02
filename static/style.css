@@ -1,168 +1,76 @@
+/* === Styles de base existants === */
 body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  background: #e0f2f7; /* bleu pastel clair */
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
 }
 
-header {
-  background: #4fc3f7; /* bleu pastel moyen */
-  color: white;
-  padding: 10px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.container {
+    width: 80%;
+    margin: auto;
+    padding: 20px;
 }
 
-
-
-header nav a:hover {
-  color: #ffffff;
-}
-
-main {
-  max-width: 800px;
-  margin: 20px auto;
-  padding: 25px;
-  background: #ffffff; /* fond blanc */
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
-
-h1, h2, h3 {
-  text-align: center;
-  color: #0288d1; /* bleu pastel foncé */
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 15px;
-}
-
-table th, table td {
-  padding: 10px;
-  border: 1px solid #b3e5fc; /* bleu pastel très clair */
-  text-align: center;
-  color: #01579b; /* bleu foncé */
-}
-
-.answer-btn {
-  display: block;
-  width: 100%;
-  margin: 6px 0;
-  padding: 12px;
-  border: 1px solid #4fc3f7;
-  background: #b3e5fc; /* bleu pastel clair */
-  cursor: pointer;
-  font-size: 16px;
-  text-align: left;
-  border-radius: 6px;
-  position: relative;
-  transition: background 0.3s, color 0.3s;
-}
-
-.answer-btn.correct {
-  background: #81d4fa; /* bleu clair pour correct */
-  color: #ffffff;
-}
-
-.answer-btn.incorrect {
-  background: #4fc3f7; /* bleu pastel moyen pour incorrect */
-  color: #ffffff;
-}
-
-.answer-btn .icon {
-  float: right;
-  font-weight: bold;
-}
-
-.answer-btn:hover:not(:disabled) {
-  background: #b3e5fc;
-}
-
-.progress-container {
-  background: #b3e5fc;
-  height: 20px;
-  width: 100%;
-  border-radius: 10px;
-  margin-bottom: 15px;
-}
-
-.progress {
-  background: #0288d1;
-  height: 100%;
-  border-radius: 10px;
-}
-
-.btn {
-  display: inline-block;
-  padding: 10px 16px;
-  background: #4fc3f7;
-  color: white;
-  border-radius: 6px;
-  text-decoration: none;
-  font-weight: bold;
-  margin-top: 12px;
-  transition: background 0.3s;
-}
-
-.btn:hover {
-  background: #0288d1;
-}
-/* ------------------ Boutons réponses ------------------ */
-.answer-btn {
-    display: block;
-    width: 100%;
-    padding: 12px 15px;
-    margin: 10px 0;
-    background-color: #d9f0ff; /* bleu très clair au repos */
-    border: 2px solid #1e3a5f; /* bleu foncé */
-    border-radius: 8px;
-    font-size: 16px;
+button, input[type="submit"] {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
     cursor: pointer;
-    text-align: left;
-    position: relative;
-    transition: background-color 0.3s, border-color 0.3s;
 }
 
-.answer-btn:hover {
-    background-color: #b3e0ff; /* bleu clair lors du hover */
+button:hover, input[type="submit"]:hover {
+    background-color: #45a049;
 }
 
-/* Une fois cliqué et résultat affiché */
-.answer-btn.correct {
-    background-color: #b6f0c1; /* vert pastel pour bonne réponse */
-    border-color: #4caf50;
-    color: #1e3a1f;
-}
+/* === Améliorations Responsive === */
+@media screen and (max-width: 768px) {
+    .container {
+        width: 95%;
+        padding: 10px;
+    }
 
-.answer-btn.incorrect {
-    background-color: #f7b6b6; /* rouge pastel pour mauvaise réponse */
-    border-color: #f44336;
-    color: #4a1e1e;
-}
+    h1, h2, h3 {
+        font-size: 1.2em;
+        text-align: center;
+    }
 
-/* Icones ✓ et ✗ */
-.answer-btn .icon {
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-weight: bold;
-    font-size: 18px;
-}
+    form, .form-group, input, select, textarea, button {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
 
-/* Désactiver les boutons une fois cliqué */
-.answer-btn:disabled {
-    cursor: default;
-    opacity: 0.85;
-}
-.current-player {
-    background-color: #a8d0e6;  /* bleu pastel plus soutenu */
-    font-weight: bold;
-}
-.current-player {
-    background-color: #a8d0e6;  /* bleu pastel plus soutenu */
-    font-weight: bold;
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9em;
+    }
+
+    th, td {
+        padding: 8px;
+        text-align: left;
+    }
+
+    nav ul {
+        display: flex;
+        flex-direction: column;
+        padding: 0;
+    }
+
+    nav ul li {
+        margin: 5px 0;
+    }
+
+    button, input[type="submit"] {
+        font-size: 1em;
+        padding: 12px;
+    }
+
+    img, video {
+        max-width: 100%;
+        height: auto;
+    }
 }
