@@ -36,6 +36,7 @@ def hash_password(pwd):
 def verify_password(pwd, hash):
     return check_password_hash(hash, pwd)
 
+
 def get_user_by_pseudo(pseudo):
     cur = mysql.connection.cursor()
     cur.execute("SELECT id, pseudo, password, score FROM users WHERE pseudo=%s", (pseudo,))
