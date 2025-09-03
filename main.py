@@ -30,11 +30,9 @@ mysql = MySQL(app)
 # ------------------ UTILITAIRES ------------------
 QUESTIONS_FILE = "Questions_QCM.txt"
 
+# Actuel (faible)
 def hash_password(pwd):
-    return generate_password_hash(pwd, method='pbkdf2:sha256', salt_length=8)
-
-def verify_password(pwd, hash):
-    return check_password_hash(hash, pwd)
+    return hashlib.sha256(pwd.encode()).hexdigest()
 
 def get_user_by_pseudo(pseudo):
     cur = mysql.connection.cursor()
