@@ -3,8 +3,6 @@ import random
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_mysqldb import MySQL
 from dotenv import load_dotenv
-from werkzeug.security import generate_password_hash, check_password_hash
-
 import os
 
 # ------------------ CHARGEMENT VARIABLES D'ENV ------------------
@@ -30,7 +28,6 @@ mysql = MySQL(app)
 # ------------------ UTILITAIRES ------------------
 QUESTIONS_FILE = "Questions_QCM.txt"
 
-# Actuel (faible)
 def hash_password(pwd):
     return hashlib.sha256(pwd.encode()).hexdigest()
 
