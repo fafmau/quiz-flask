@@ -1,168 +1,179 @@
+/* ------------------ RESET DE BASE ------------------ */
+body, h1, h2, h3, p, ul, li, form {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ------------------ STYLE GLOBAL ------------------ */
 body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  background: #e0f2f7; /* bleu pastel clair */
+    font-family: Arial, sans-serif;
+    background-color: #f4f6f8;
+    color: #333;
+    line-height: 1.6;
+    padding: 20px;
 }
 
-header {
-  background: #4fc3f7; /* bleu pastel moyen */
-  color: white;
-  padding: 10px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+/* ------------------ CONTAINER PRINCIPAL ------------------ */
+.container {
+    max-width: 900px;
+    margin: auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-
-
-header nav a:hover {
-  color: #ffffff;
+/* ------------------ TITRES ------------------ */
+h1, h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    text-align: center;
 }
 
-main {
-  max-width: 800px;
-  margin: 20px auto;
-  padding: 25px;
-  background: #ffffff; /* fond blanc */
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+/* ------------------ FORMULAIRES ------------------ */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
 }
 
-h1, h2, h3 {
-  text-align: center;
-  color: #0288d1; /* bleu pastel foncé */
+input[type="text"], input[type="password"] {
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    width: 100%;
+    font-size: 16px;
 }
 
+button, input[type="submit"] {
+    background: #3498db;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s ease;
+}
+
+button:hover, input[type="submit"]:hover {
+    background: #2980b9;
+}
+
+/* ------------------ TABLEAUX ------------------ */
 table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 15px;
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
 }
 
 table th, table td {
-  padding: 10px;
-  border: 1px solid #b3e5fc; /* bleu pastel très clair */
-  text-align: center;
-  color: #01579b; /* bleu foncé */
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: center;
 }
 
-.answer-btn {
-  display: block;
-  width: 100%;
-  margin: 6px 0;
-  padding: 12px;
-  border: 1px solid #4fc3f7;
-  background: #b3e5fc; /* bleu pastel clair */
-  cursor: pointer;
-  font-size: 16px;
-  text-align: left;
-  border-radius: 6px;
-  position: relative;
-  transition: background 0.3s, color 0.3s;
+table th {
+    background: #3498db;
+    color: white;
 }
 
-.answer-btn.correct {
-  background: #81d4fa; /* bleu clair pour correct */
-  color: #ffffff;
+/* ------------------ ALERTES / MESSAGES ------------------ */
+.alert {
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 20px;
 }
 
-.answer-btn.incorrect {
-  background: #4fc3f7; /* bleu pastel moyen pour incorrect */
-  color: #ffffff;
+.alert.success {
+    background: #2ecc71;
+    color: white;
 }
 
-.answer-btn .icon {
-  float: right;
-  font-weight: bold;
+.alert.error {
+    background: #e74c3c;
+    color: white;
 }
 
-.answer-btn:hover:not(:disabled) {
-  background: #b3e5fc;
-}
-
-.progress-container {
-  background: #b3e5fc;
-  height: 20px;
-  width: 100%;
-  border-radius: 10px;
-  margin-bottom: 15px;
-}
-
-.progress {
-  background: #0288d1;
-  height: 100%;
-  border-radius: 10px;
-}
-
-.btn {
-  display: inline-block;
-  padding: 10px 16px;
-  background: #4fc3f7;
-  color: white;
-  border-radius: 6px;
-  text-decoration: none;
-  font-weight: bold;
-  margin-top: 12px;
-  transition: background 0.3s;
-}
-
-.btn:hover {
-  background: #0288d1;
-}
-/* ------------------ Boutons réponses ------------------ */
-.answer-btn {
-    display: block;
-    width: 100%;
-    padding: 12px 15px;
-    margin: 10px 0;
-    background-color: #d9f0ff; /* bleu très clair au repos */
-    border: 2px solid #1e3a5f; /* bleu foncé */
-    border-radius: 8px;
-    font-size: 16px;
-    cursor: pointer;
-    text-align: left;
-    position: relative;
-    transition: background-color 0.3s, border-color 0.3s;
-}
-
-.answer-btn:hover {
-    background-color: #b3e0ff; /* bleu clair lors du hover */
-}
-
-/* Une fois cliqué et résultat affiché */
-.answer-btn.correct {
-    background-color: #b6f0c1; /* vert pastel pour bonne réponse */
-    border-color: #4caf50;
-    color: #1e3a1f;
-}
-
-.answer-btn.incorrect {
-    background-color: #f7b6b6; /* rouge pastel pour mauvaise réponse */
-    border-color: #f44336;
-    color: #4a1e1e;
-}
-
-/* Icones ✓ et ✗ */
-.answer-btn .icon {
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-weight: bold;
+/* ------------------ QUIZ ------------------ */
+.quiz-question {
     font-size: 18px;
+    margin-bottom: 20px;
 }
 
-/* Désactiver les boutons une fois cliqué */
-.answer-btn:disabled {
-    cursor: default;
-    opacity: 0.85;
+.quiz-answers {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
-.current-player {
-    background-color: #a8d0e6;  /* bleu pastel plus soutenu */
-    font-weight: bold;
+
+.quiz-answers button {
+    background: #ecf0f1;
+    color: #2c3e50;
+    border: 1px solid #ccc;
+    padding: 12px;
+    border-radius: 6px;
+    text-align: left;
+    transition: background 0.3s ease;
 }
-.current-player {
-    background-color: #a8d0e6;  /* bleu pastel plus soutenu */
-    font-weight: bold;
+
+.quiz-answers button:hover {
+    background: #bdc3c7;
+}
+
+/* ------------------ RESPONSIVE ------------------ */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        padding: 15px;
+    }
+
+    h1, h2 {
+        font-size: 22px;
+    }
+
+    input[type="text"], input[type="password"], button, input[type="submit"] {
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    table, thead, tbody, th, td, tr {
+        display: block;
+        width: 100%;
+    }
+
+    table tr {
+        margin-bottom: 15px;
+    }
+
+    table td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+    }
+
+    table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 10px;
+        width: 45%;
+        text-align: left;
+        font-weight: bold;
+    }
+}
+
+@media (max-width: 480px) {
+    h1, h2 {
+        font-size: 18px;
+    }
+
+    button, input[type="submit"] {
+        padding: 8px;
+        font-size: 12px;
+    }
 }
