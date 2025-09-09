@@ -3,6 +3,8 @@ import random
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_mysqldb import MySQL
 from dotenv import load_dotenv
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
+from werkzeug.wrappers import Response
 import os
 
 # ------------------ CHARGEMENT VARIABLES D'ENV ------------------
@@ -15,6 +17,12 @@ MYSQL_DB = os.environ.get("MYSQL_DB", "quiz_db")
 
 # ------------------ INITIALISATION FLASK ------------------
 app = Flask(__name__)
+
+# On monte l'app sous /qcm
+app.wsgi_app = DispatcherMiddleware(Response('Not Found', status=404), {
+    '/qcm': app.wsgi_app
+})
+
 app.secret_key = SECRET_KEY
 
 app.config['MYSQL_HOST'] = os.getenv("MYSQL_HOST", "localhost")
