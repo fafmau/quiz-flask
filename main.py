@@ -23,6 +23,9 @@ app.config['MYSQL_PASSWORD'] = os.getenv("MYSQL_PASSWORD", "")
 app.config['MYSQL_DB'] = os.getenv("MYSQL_DB", "quiz_db")
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'  # pratique pour fetchall() en dict
 
+app.config['APPLICATION_ROOT'] = '/qcm'
+
+
 mysql = MySQL(app)
 
 # ------------------ UTILITAIRES ------------------
