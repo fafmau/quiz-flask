@@ -16,7 +16,8 @@ MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD", "")
 MYSQL_DB = os.environ.get("MYSQL_DB", "quiz_db")
 
 # ------------------ INITIALISATION FLASK ------------------
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/qcm/static', static_folder='static')
+
 
 # On monte l'app sous /qcm
 app.wsgi_app = DispatcherMiddleware(Response('Not Found', status=404), {
